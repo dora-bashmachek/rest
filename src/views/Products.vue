@@ -1,70 +1,94 @@
 <template>
-<div>
-  <div class="content">
-    <!-- <p>{{ 'http://localhost:1337' + products?.data[0].images[0].formats?.thumbnail?.url }}</p> -->
-<div class="head">
- <div><h1 class="center">Products</h1>  
-</div>
-</div>
-
-<div class="body">
-<div class="search">
-    <!-- <i class="fa fa-search" aria-hidden="true">search</i> -->
-    <input type="text" v-model="searchString" @input="pushQueryToUrl({ search: searchString })" />
-
-</div>
-<div class ="categ">
-    <div v-for="c in categories.data" :key="c.id" class="categories">
-      <button class="button" @click="pushQueryToUrl({ categoryId: c.id })">{{ c.title}}</button>
-    </div>
-</div>
-<div class ="price">
-    <select name="sort" v-model="sort" @change="asd($event)">
-      <option value="updatedAt:desc">Newest</option>
-      <option value="price:asc">Price: Ascending</option>
-      <option value="price:desc">Price: Descending</option>
-    </select>
-</div>
-<div class="filters-and-products">
-<div class ="dua">
-  <h1>Filters</h1>
-      <p>dualSIM</p>
-      <input type="checkbox" name="dualSIM" value='dualSIM' @change="pushQueryToUrl({ spec: $event.target.value })">
-      <p>lidar</p>
-      <input type="checkbox" name="lidar" value='lidar' @change="pushQueryToUrl({ spec: $event.target.value })">
-      <p>touchbar</p>
-      <input type="checkbox" name="touchbar" value='touchbar' @change="pushQueryToUrl({ spec: $event.target.value })">
-</div>
-<div class ="prod">
-    <div v-for="p in products.data" :key="p.id" class="product">
-      <p>{{ p.title }}</p>
-      <p>{{ p.price }}</p>
-      <p>{{ p.spec }}</p>
-      <div v-for="i in p.images" :key="i.id">
-      <!-- <p>{{  }}</p> -->
-      <img :src="'http://localhost:1337' + i?.formats?.thumbnail?.url" alt="">
+  <div class="body">
+    <div class="header">
+      <h1>tehno-world</h1>
+      <div class="navigation">
+        <div class="categories" v-for="c in categories.data" :key="c.id">
+          <ul>
+            <li @click="pushQueryToUrl({ categoryId: c.id })">{{ c.title }}</li>
+          </ul>
+        </div>
+        <input
+          type="search"
+          placeholder="search"
+          v-model="searchString"
+          @input="pushQueryToUrl({ search: searchString })"
+        />
       </div>
     </div>
-</div>
-</div>
-<div class ="pagination">
-    <div v-for="i in products?.meta?.pagination?.pageCount" :key="i">
-      <button @click="pushQueryToUrl({ page: i })">{{ i }}</button>
+
+    <div class="image-box">
+      <div class="image-box-text">
+        <p>
+          The most obvious example of a call to action is a "Buy Now" button, or a "Shop Now" button on your storefront.
+        </p>
+        <a href="#"><button class="image-box-button">BUY NOW</button></a>
+      </div>
     </div>
-</div>
-</div>
-</div>
-</div>
-  
-  
+
+    <div class="sort">
+      <h1>products</h1>
+      <select name="sort" v-model="sort" @change="sortProducts($event)">
+        <option value="updatedAt:desc">newest</option>
+        <option value="price:asc">price: ascending</option>
+        <option value="price:desc">price: descending</option>
+      </select>
+    </div>
+    <div class="products-and-filters">
+<div class="products">
+<div class="product-card" v-for="p in products.data" :key="p.id" @click="moveProduct(p.id)">
+          <div class="product-img">
+            <div v-for="i in p.images" :key="i.id">
+              <img :src="'http://localhost:1337' + i?.url" alt="" />
+            </div>
+          </div>
+          <p>{{ p.title }}</p>
+          <p class="price">{{ p.price }} USD</p>
+        </div>
+      </div>
+      <div class="filters">
+        <h1>filters</h1>
+        <p>
+          <input
+            type="checkbox"
+            value="lidar:true"
+            @change="pushQueryToUrl({ spec: $event.target.value })"
+          /><label>lidar</label>
+        </p>
+        <p>
+          <input
+            type="checkbox"
+            value="dualsim:true"
+            @change="pushQueryToUrl({ spec: $event.target.value })"
+          /><label>dualsim</label>
+        </p>
+        <p>
+          <input
+            type="checkbox"
+            value="touchbar:true"
+            @change="pushQueryToUrl({ spec: $event.target.value })"
+          /><label>touchbar</label>
+        </p>
+      </div>
+
+    </div>
+    <div class="pages">
+      <div v-for="i in products?.meta?.pagination?.pageCount" :key="i">
+        <button @click="pushQueryToUrl({ page: i })">{{ i }}</button>
+      </div>
+    </div>
+    <div class="footer">
+      <p>find us on <a href="#">instagram</a></p>
+    </div>
+  </div>
 </template>
 
 <script>
 import { useECommerceStore } from "@/stores/e-commerce";
 import { useRoute, useRouter } from "vue-router";
 import { ref, onMounted, watchEffect } from "vue";
-import { storeToRefs } from 'pinia'
-import qs from 'qs'
+import { storeToRefs } from "pinia";
+import qs from "qs";
 export default {
   setup() {
     const eCommerceStore = useECommerceStore();
@@ -73,67 +97,60 @@ export default {
     const route = useRoute();
     const router = useRouter();
     const sort = ref(route.query.sort || "updatedAt:desc");
-    const searchString = ref('')
-    const spec = ref()
+    const searchString = ref("");
+    const spec = ref();
     let ezQuery = {};
-    function asd(event) {
+    function moveProduct(id) {
+      router.push(`/products/${id}`);
+    }
+    function sortProducts(event) {
       pushQueryToUrl({ sort: event.target.value });
     }
     function pushQueryToUrl(queryParam) {
       Object.entries(queryParam).forEach(([key, value]) => {
-
         if (value) {
           if (key == "spec") {
             if (ezQuery[key] == undefined) {
-              ezQuery[key] = value
-              console.log(1)
-              console.log('ezQK',ezQuery[key])
-                  console.log('eqq1', ezQuery)
-            } else {  
-              console.log(11123, ezQuery[key])
-              // console.log('lol',ezQuery[key].map(s => s.join(':')+ ',' + value))
-              // ezQuery[key] = ezQuery[key]+ ',' + value;
-              ezQuery[key] = ezQuery[key].map(s => s.join(':')) + ',' + value;
-              
-              // ezQuery[key] = queryParam.spec
-              console.log(2)
-              console.log( 'value',value)
-              console.log('ezQuery', ezQuery)
-              console.log('ezQK2',ezQuery[key])
+              ezQuery[key] = value;
+              console.log(1);
+              console.log("ezQK", ezQuery[key]);
+              console.log("eqq1", ezQuery);
+            } else {
+              ezQuery[key] = ezQuery[key].map((s) => s.join(":")) + "," + value;
             }
-
-
           } else {
             ezQuery[key] = value;
           }
-        }
-        else {
+        } else {
           ezQuery[key] = undefined;
         }
       });
-      console.log('qparam', queryParam)
+      console.log("qparam", queryParam);
 
-      router.push({ query: ezQuery })
+      router.push({ query: ezQuery });
     }
     async function createProductQuery() {
-      console.log('nado',ezQuery.spec)
       ezQuery = {
         page: route.query.page,
         gte: route.query.gte,
         lte: route.query.lte,
         sort: route.query.sort,
         categoryId: route.query.categoryId,
-        spec: route.query.spec ? route.query.spec.split(',').map(s => s.split(':')) : undefined,
-        search: route.query.search != '' || route.query.search ? route.query.search : undefined
-      }
-      console.log('ezQ.spec',ezQuery.spec) 
-      // console.log(ezQuery.spec)
+        spec: route.query.spec
+          ? route.query.spec.split(",").map((s) => s.split(":"))
+          : undefined,
+        search:
+          route.query.search != "" || route.query.search
+            ? route.query.search
+            : undefined,
+      };
       const pagination = { page: route.query.page || 1, pageSize: 6 };
       const populate = ["category", "images"];
       const sort = route.query.sort ? [route.query.sort] : ["updatedAt:desc"];
-      const search = route.query.search != '' && route.query.search ? route.query.search : undefined
-      const spec = route.query.spec
-      console.log(spec)
+      const search =
+        route.query.search != "" && route.query.search
+          ? route.query.search
+          : undefined;
 
       const filters = {
         $and: [
@@ -151,33 +168,31 @@ export default {
             category: {
               id: {
                 $eq: route.query.categoryId || categories[0]?.id,
-              }
-            }
+              },
+            },
           },
           {
             title: {
-              $startsWith: search,
-            }
+              $containsi: search,
+            },
           },
         ],
       };
       if (ezQuery.spec) {
-        ezQuery.spec.map(s => {
+        ezQuery.spec.map((s) => {
           filters.$and.push({
             spec: {
-              $containsi: `"${s[0]}":${s[1]}`
-            }
-          })
-        })
+              $containsi: `"${s[0]}":${s[1]}`,
+            },
+          });
+        });
       }
-
-
       const query = {
         populate,
         pagination,
         sort,
         filters,
-      }
+      };
       await eCommerceStore.fetchCategories();
       await eCommerceStore.fetchProducts(query);
       console.log(filters);
@@ -185,15 +200,16 @@ export default {
     watchEffect(() => {
       createProductQuery();
     });
-    onMounted(() => { });
+    onMounted(() => {});
     return {
       products,
       eCommerceStore,
       pushQueryToUrl,
       categories,
       sort,
-      asd,
-      searchString
+      sortProducts,
+      searchString,
+      moveProduct,
     };
   },
   name: "Products",
@@ -201,93 +217,139 @@ export default {
 </script>
 
 <style scoped>
-.content{
-    margin: 0 auto;
-    width: 1320px;
-    background-color: #f6f6f6;
-    border-radius: 10px;
-    box-shadow: 0 0 10px rgb(0 0 0 / 50%);
-    /* opacity: 0.5; */
+.body {
+  width: 1200px;
+  margin: 0 auto;
+  background-color: #fff;
 }
-.head{
-    display: flex;
-    justify-content: center;
-    background: url(https://cdn0.ipoint.kz/AfrOrF3gWeDA6VOlDG4TzxMv39O7MXnF4CXpKUwGqRM/plain/s3://catalog-categories/29/4471/multi-product_mac_mini_macbook_air_imac_macbook_pro_13-in_m1_chip_family_4-up_print__usen.png@webp) no-repeat center;
-    padding: 20%;
-
-}
-.center {
-  text-align: center;
-}
-.search{
-    /* background-color: rgb(228, 108, 158); */
-    display: flex;
-    flex-direction: row-reverse;
-    padding: 2%;
-}
-.categ {
-background-color:rgb(255, 255, 255);
-}
-.button{
-display: inline-block;
-  color: rgb(0, 0, 0);
-  font-weight: 700;
-  text-decoration: none;
-  user-select: none;
-  padding: .5em 2em;
-  outline: none;
-  border: 2px solid;
-  border-radius: 1px;
-  transition: 0.2s;
-}
-.button:hover { background: rgba(255,255,255,.2); }
-.button:active { background: white; }
-.filters-and-products {
+.header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0px 20px;
 }
-.price{
-/* background-color:rgb(255, 0, 0); */
-padding: 2%;
-display: flex;
-flex-direction: row-reverse;
+.navigation {
+  display: flex;
+  align-items: center;
 }
-.prod{
-background-color:rgb(255, 255, 255);
-
+.navigation li {
+  list-style-type: none;
 }
-.product{
-    border: double;
-    display: flex;
-    flex-direction: column-reverse;
-    align-items: center;
-    border-radius: 10px;
-    width: 320px;
+.navigation li:hover {
+  color: #a18a68;
+  text-decoration: underline;
 }
-.pagination{
-background-color:rgb(255, 255, 255);
+.navigation input {
+  margin-left: 20px;
+  padding: 5px;
+  border: #a18a68 solid 1px;
+  border-radius: 4%;
 }
-.dua{
-background-color:rgb(255, 255, 255);
-width: 15%;
-padding: 10px;
+.image-box {
+  display: flex;
+  align-items: center;
+  background-image: url(http://i.yapx.ru/R7rKF.jpg);
+  background-size: cover;
+  width: 1100px;
+  height: 500px;
+  padding-left: 100px;
+  border-width: 1px 0px;
+  border-color: #a18a68;
+  border-style: solid;
 }
-
-.categ{
-    /* background-color: rgb(58, 216, 37); */
-    display: flex;
-    font-size: 200%;
-    justify-content: space-evenly;
+.image-box-text {
+  width: 35%;
+  font-size: 15px;
 }
-.pagination{
-    /* background-color: rgb(131, 92, 116); */
-    display: flex;
-    justify-content: center;
-    padding: 50%;
+.image-box-button {
+  padding: 10px 20px;
+  border: #ffffff solid 0px;
+  background-color: #eba69b;
+  border-radius: 4%;
+  color: #fff;
+  font-weight: 700;
+  margin: 20px 0px;
+  opacity: 0.8;
 }
-.prod{
-    /* background-color: rgb(45, 223, 230); */
-    display: flex;
-    flex-wrap: wrap;
-    width: 84%;
+.image-box-button:hover {
+  opacity: 1;
+}
+.sort {
+  text-align: right;
+  margin: 20px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+.sort select {
+  padding: 5px;
+  border: #a18a68 solid 1px;
+  border-radius: 4%;
+  color: #757575;
+}
+.products-and-filters {
+  padding: 0px 60px;
+  display: flex;
+  flex-wrap: wrap;
+}
+.filters {
+  border: 1px solid #a18a68;
+  width: 15%;
+  padding: 30px;
+}
+.filters h1 {
+  font-size: 24px;
+}
+.products {
+  display: flex;
+  flex-wrap: wrap;
+  width: 79%;
+}
+.product-card {
+  width: 242px;
+  padding: 20px;
+  border: #a18a6859 solid 1px;
+}
+.product-card:hover {
+  border: #a18a68 solid 1px;
+  transition: 0.5s;
+  cursor: pointer;
+}
+.products img {
+  width: 200px;
+}
+.product-img {
+  display: flex;
+  justify-content: center;
+}
+.price {
+  color: #a18a68;
+  font-weight: 700;
+}
+.pages {
+  display: flex;
+  margin: 20px 20px;
+}
+.pages button {
+  background-color: transparent;
+  color: #a18a68;
+  font-weight: 700;
+  margin-right: 10px;
+  border: none;
+  cursor: pointer;
+}
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-top: 1px solid #a18a6859;
+}
+.footer a {
+  color: #a18a68;
+  text-decoration: none;
+}
+.footer a:hover {
+  text-decoration: underline;
 }
 </style>

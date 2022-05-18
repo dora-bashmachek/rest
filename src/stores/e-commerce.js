@@ -14,6 +14,7 @@ export const useECommerceStore = defineStore({
     products: useLocalStorage('products'),
     product: useLocalStorage('product'),
     categories: useLocalStorage('categories'),
+    category: useLocalStorage('category')
   }),
   getters: {},
   actions: {
@@ -23,13 +24,13 @@ export const useECommerceStore = defineStore({
       this.products = data
     },
     async fetchProduct(id) {
-      const { data } = await axios.get(`/api/products/${id}`)
+      const { data } = await axios.get(`/api/products/${id}?populate=images`)
       this.product = data
     },
     async fetchCategories() {
       const { data } = await axios.get('/api/categories')
       this.categories = data
-    }
+    },
   }
 })
 // qs.stringify(query,{ encodeValuesOnly: true })
